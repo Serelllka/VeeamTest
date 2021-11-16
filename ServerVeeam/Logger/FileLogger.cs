@@ -13,7 +13,7 @@ namespace Server.Logger
         
         public void Log(string logMassage)
         {
-            File.AppendAllText(_fileName, logMassage);
+            File.AppendAllText(_fileName, $"{logMassage}\n");
         }
     }
 }

@@ -1,5 +1,7 @@
 ﻿
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -29,53 +31,46 @@ namespace Server.Entity
 
         public override void Start()
         {
-            byte[] data = new byte[_bufferSize];
             NetworkStream stream = _client.GetStream();
-            string userId, userCode, userMessage;
 
-            int readBytes;
-            StringBuilder stringBuilder = new StringBuilder();
+            string userId = ReceiveMessage(stream);
+            if (_users.All(item => item.Id != userId))
+            {
+                SendMessage("This user isn't registered!\n", stream);
+                return;
+            }
             
+            string userCode = ReceiveMessage(stream);
+            if (_users.First(item => item.Id == userId).Code != userCode)
+            {
+                SendMessage("Wrong user code!\n", stream);
+                return;
+            }
+            
+            string userMessage = ReceiveMessage(stream);
+            SendMessage("Your message received!\n", stream);
+            _logger.Log($"{userId},{userCode}: {userMessage}");
+        }
+
+        private string ReceiveMessage(NetworkStream stream)
+        {
+            using var ms = new MemoryStream();
+            byte[] data = new byte[_bufferSize];
+            int totalReadBytes = 0;
             do
             {
-                readBytes = stream.Read(data, 0, data.Length);
-                stringBuilder.Append(Configuration.Encoder.GetString(data, 0, readBytes));
+                int read = stream.Read(data, totalReadBytes, _bufferSize);
+                ms.Write(data, totalReadBytes, read);
+                totalReadBytes += read;
             } while (stream.DataAvailable);
-            userId = stringBuilder.ToString();
 
-            stringBuilder.Clear();
-            do
-            {
-                readBytes = stream.Read(data, 0, data.Length);
-                stringBuilder.Append(Configuration.Encoder.GetString(data, 0, readBytes));
-            } while (stream.DataAvailable);
-            userCode = stringBuilder.ToString();
+            return Configuration.Encoder.GetString(ms.ToArray());
+        }
 
-            stringBuilder.Clear();
-            do
-            {
-                readBytes = stream.Read(data, 0, data.Length);
-                stringBuilder.Append(Configuration.Encoder.GetString(data, 0, readBytes));
-            } while (stream.DataAvailable);
-            userMessage = stringBuilder.ToString();
-
-            byte[] msg;
-            if (_users.FirstOrDefault(item => item.Id == userId) is null) 
-            {
-                msg = Configuration.Encoder.GetBytes("This user isn't registered!\n");
-                stream.Write(msg, 0 , msg.Length);
-            }
-            else if (_users.First(item => item.Id == userId).Code != userCode)
-            {
-                msg = Configuration.Encoder.GetBytes("Wrong user code!\n");
-                stream.Write(msg, 0 , msg.Length);
-            }
-            else
-            {
-                msg = Configuration.Encoder.GetBytes("Your message received!\n");
-                stream.Write(msg, 0 , msg.Length);
-                _logger.Log($"{userId},{userCode}: {userMessage}");
-            }
+        private void SendMessage(string message, NetworkStream stream)
+        {
+            byte[] messageInBytes = Configuration.Encoder.GetBytes(message);
+            stream.Write(messageInBytes, 0, messageInBytes.Length);
         }
     }
 }
