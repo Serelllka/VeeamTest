@@ -3,18 +3,19 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Server.Entity;
+using Server.Logger;
 
 namespace Server.Services
 {
     public class SessionManager
     {
-        private Logger _logger;
+        private ILogger _logger;
         private string _ipAddress;
         private int _firstSessionPort;
         private int _secondSessionPort;
         private List<User> _users;
 
-        public SessionManager(string ip, int firstPort, int secondPort, Logger logger)
+        public SessionManager(string ip, int firstPort, int secondPort, ILogger logger)
         {
             _logger = logger;
             _ipAddress = ip;

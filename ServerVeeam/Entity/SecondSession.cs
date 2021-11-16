@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using Server.Logger;
+using Veeam.Configuration;
 
 namespace Server.Entity
 {
@@ -11,11 +13,11 @@ namespace Server.Entity
         private List<User> _users;
         private TcpClient _client;
         private int _bufferSize;
-        private Logger _logger;
+        private ILogger _logger;
 
         public SecondSession(TcpClient client,
             List<User> users,
-            Logger logger,
+             ILogger logger,
             int bufferSize = 1024) 
         : base(client)
         {
@@ -33,10 +35,11 @@ namespace Server.Entity
 
             int readBytes;
             StringBuilder stringBuilder = new StringBuilder();
+            
             do
             {
                 readBytes = stream.Read(data, 0, data.Length);
-                stringBuilder.Append(Encoding.Unicode.GetString(data, 0, readBytes));
+                stringBuilder.Append(Configuration.Encoder.GetString(data, 0, readBytes));
             } while (stream.DataAvailable);
             userId = stringBuilder.ToString();
 
@@ -44,7 +47,7 @@ namespace Server.Entity
             do
             {
                 readBytes = stream.Read(data, 0, data.Length);
-                stringBuilder.Append(Encoding.Unicode.GetString(data, 0, readBytes));
+                stringBuilder.Append(Configuration.Encoder.GetString(data, 0, readBytes));
             } while (stream.DataAvailable);
             userCode = stringBuilder.ToString();
 
@@ -52,26 +55,26 @@ namespace Server.Entity
             do
             {
                 readBytes = stream.Read(data, 0, data.Length);
-                stringBuilder.Append(Encoding.Unicode.GetString(data, 0, readBytes));
+                stringBuilder.Append(Configuration.Encoder.GetString(data, 0, readBytes));
             } while (stream.DataAvailable);
             userMessage = stringBuilder.ToString();
 
             byte[] msg;
             if (_users.FirstOrDefault(item => item.Id == userId) is null) 
             {
-                msg = Encoding.Unicode.GetBytes("This user isn't registered!\n");
+                msg = Configuration.Encoder.GetBytes("This user isn't registered!\n");
                 stream.Write(msg, 0 , msg.Length);
             }
             else if (_users.First(item => item.Id == userId).Code != userCode)
             {
-                msg = Encoding.Unicode.GetBytes("Wrong user code!\n");
+                msg = Configuration.Encoder.GetBytes("Wrong user code!\n");
                 stream.Write(msg, 0 , msg.Length);
             }
             else
             {
-                msg = Encoding.Unicode.GetBytes("Your message received!\n");
+                msg = Configuration.Encoder.GetBytes("Your message received!\n");
                 stream.Write(msg, 0 , msg.Length);
-                _logger.Log(userMessage);
+                _logger.Log($"{userId},{userCode}: {userMessage}");
             }
         }
     }

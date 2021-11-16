@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using Veeam.Configuration;
 using Veeam.Tools;
 
 namespace Server.Entity
@@ -26,7 +27,7 @@ namespace Server.Entity
 
         public override void Start()
         {
-            byte[] data =  new byte[_bufferSize];
+            byte[] data = new byte[_bufferSize];
             NetworkStream stream = _client.GetStream();
             int readBytes;
             
@@ -34,7 +35,7 @@ namespace Server.Entity
             do
             {
                 readBytes = stream.Read(data, 0, data.Length);
-                stringBuilder.Append(Encoding.Unicode.GetString(data, 0, readBytes));
+                stringBuilder.Append(Configuration.Encoder.GetString(data, 0, readBytes));
             } while (stream.DataAvailable);
 
             string message = stringBuilder.ToString();
@@ -44,7 +45,7 @@ namespace Server.Entity
             }
             Guid clientId = Guid.NewGuid();
             _users.Add(new User(message, clientId.ToString()));
-            data = Encoding.Unicode.GetBytes(clientId.ToString());
+            data = Configuration.Encoder.GetBytes(clientId.ToString());
             stream.Write(data, 0, data.Length);
         }
     }

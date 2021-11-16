@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Threading;
+using Server.Logger;
 using Server.Services;
 
 namespace Server
@@ -11,7 +12,7 @@ namespace Server
             const int firstPort = 8000;
             const int secondPort = 8001;
 
-            var logger = new Logger(new FileStream("logger.log", FileMode.Create));
+            var logger = new FileLogger("logger.log");
             var sessionManager = new SessionManager("127.0.0.1", firstPort, secondPort, logger);
             
             var firstSession = new Thread(sessionManager.StartFirstSession);

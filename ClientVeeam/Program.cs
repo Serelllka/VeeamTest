@@ -2,6 +2,7 @@
 using System.Text;
 using Test.Entity;
 using Test.ValueObject;
+using Veeam.Configuration;
 
 namespace Test
 {
@@ -20,7 +21,7 @@ namespace Test
             
             if (userId != null)
             {
-                byte[] data = Encoding.Unicode.GetBytes(userId);
+                byte[] data = Configuration.Encoder.GetBytes(userId);
                 client.SendSomeData(data);
             }
             
@@ -31,7 +32,7 @@ namespace Test
                 do
                 {
                     grabData = client.GrabSomeData();
-                    builder.Append(Encoding.Unicode.GetString(grabData.Data, 0, grabData.DataSize));
+                    builder.Append(Configuration.Encoder.GetString(grabData.Data, 0, grabData.DataSize));
                 } while (grabData.DataSize == client.BufferSize);
 
                 string userCode = builder.ToString();
@@ -44,7 +45,7 @@ namespace Test
                 string userCode = Console.ReadLine();
                 if (userCode != null)
                 {
-                    byte[] data = Encoding.Unicode.GetBytes(userCode);
+                    byte[] data = Configuration.Encoder.GetBytes(userCode);
                     client.SendSomeData(data);
                 }
                 
@@ -52,7 +53,7 @@ namespace Test
                 string userMessage = Console.ReadLine();
                 if (userMessage != null)
                 {
-                    byte[] data = Encoding.Unicode.GetBytes(userMessage);
+                    byte[] data = Configuration.Encoder.GetBytes(userMessage);
                     client.SendSomeData(data);
                 }
 
@@ -60,7 +61,7 @@ namespace Test
                 do
                 {
                     grabData = client.GrabSomeData();
-                    builder.Append(Encoding.Unicode.GetString(grabData.Data, 0, grabData.DataSize));
+                    builder.Append(Configuration.Encoder.GetString(grabData.Data, 0, grabData.DataSize));
                 } while (grabData.DataSize == client.BufferSize);
 
                 var result = builder.ToString();
